@@ -331,7 +331,7 @@ public final class AudioEncoder implements AsyncProcessor {
             Ln.d("Creating audio encoder by name: '" + encoderName + "'");
             try {
                 MediaCodec mediaCodec = MediaCodec.createByCodecName(encoderName);
-                String mimeType = Codec.getMimeType(mediaCodec);
+                String mimeType = Codec.CC.getMimeType(mediaCodec);
                 if (!codec.getMimeType().equals(mimeType)) {
                     Ln.e("Audio encoder type for \"" + encoderName + "\" (" + mimeType + ") does not match codec type (" + codec.getMimeType() + ")");
                     throw new ConfigurationException("Incorrect encoder type: " + encoderName);

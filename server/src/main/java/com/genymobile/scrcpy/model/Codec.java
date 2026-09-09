@@ -1,6 +1,7 @@
 package com.genymobile.scrcpy.model;
 
 import android.media.MediaCodec;
+import com.genymobile.scrcpy.util.Ln;
 
 public interface Codec {
 
@@ -17,8 +18,10 @@ public interface Codec {
 
     String getMimeType();
 
-    static String getMimeType(MediaCodec codec) {
-        String[] types = codec.getCodecInfo().getSupportedTypes();
-        return types.length > 0 ? types[0] : null;
+    public final class CC {
+        public static String getMimeType(MediaCodec codec) {
+            String[] types = codec.getCodecInfo().getSupportedTypes();
+            return types.length > 0 ? types[0] : null;
+        }
     }
 }
