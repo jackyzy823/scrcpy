@@ -87,26 +87,29 @@ public final class UhidManager {
 
     private void registerUhidListener(int id, FileDescriptor fd) {
         if (Build.VERSION.SDK_INT >= AndroidVersions.API_23_ANDROID_6_0) {
-            queue.addOnFileDescriptorEventListener(fd, MessageQueue.OnFileDescriptorEventListener.EVENT_INPUT, (fd2, events) -> {
-                try {
-                    buffer.clear();
-                    int r = Os.read(fd2, buffer);
-                    buffer.flip();
-                    if (r > 0) {
-                        int type = buffer.getInt();
-                        if (type == UHID_OUTPUT) {
-                            byte[] data = extractHidOutputData(buffer);
-                            if (data != null) {
-                                DeviceMessage msg = DeviceMessage.createUhidOutput(id, data);
-                                sender.send(msg);
+            queue.addOnFileDescriptorEventListener(fd, MessageQueue.OnFileDescriptorEventListener.EVENT_INPUT, new MessageQueue.OnFileDescriptorEventListener() {
+                @Override
+                public int onFileDescriptorEvents(FileDescriptor fd2, int events) {
+                    try {
+                        buffer.clear();
+                        int r = Os.read(fd2, buffer);
+                        buffer.flip();
+                        if (r > 0) {
+                            int type = buffer.getInt();
+                            if (type == UHID_OUTPUT) {
+                                byte[] data = extractHidOutputData(buffer);
+                                if (data != null) {
+                                    DeviceMessage msg = DeviceMessage.createUhidOutput(id, data);
+                                    sender.send(msg);
+                                }
                             }
                         }
+                    } catch (ErrnoException | InterruptedIOException e) {
+                        Ln.e("Failed to read UHID output", e);
+                        return 0;
                     }
-                } catch (ErrnoException | InterruptedIOException e) {
-                    Ln.e("Failed to read UHID output", e);
-                    return 0;
+                    return events;
                 }
-                return events;
             });
         }
     }

@@ -102,7 +102,12 @@ public class NewDisplayCapture extends SurfaceCapture {
             }
 
             tracker = new DisplayPropertiesTracker();
-            debouncer = new DisplayResizeDebouncer(this::triggerResize);
+            debouncer = new DisplayResizeDebouncer(new DisplayResizeDebouncer.Callback() {
+                @Override
+                public void trigger(Size size) {
+                    triggerResize(size);
+                }
+            });
             debouncer.start();
 
             // Hardcode default values if not defined
@@ -241,21 +246,24 @@ public class NewDisplayCapture extends SurfaceCapture {
                 ServiceManager.getWindowManager().setDisplayImePolicy(virtualDisplayId, displayImePolicy);
             }
 
-            displayMonitor.start(virtualDisplayId, (props) -> {
-                int reason;
-                if (flexDisplay) {
-                    boolean isClientResize = tracker.onChanged(props);
-                    if (isClientResize) {
-                        reason = CaptureControl.RESET_REASON_CLIENT_RESIZED;
+            displayMonitor.start(virtualDisplayId, new DisplayMonitor.Listener() {
+                @Override
+                public void onDisplayPropertiesChanged(DisplayProperties props) {
+                    int reason;
+                    if (flexDisplay) {
+                        boolean isClientResize = tracker.onChanged(props);
+                        if (isClientResize) {
+                            reason = CaptureControl.RESET_REASON_CLIENT_RESIZED;
+                        } else {
+                            reason = CaptureControl.RESET_REASON_DISPLAY_PROPERTIES_CHANGED;
+                            // Display properties have changed, cancel pending client resize requests
+                            debouncer.cancelResize();
+                        }
                     } else {
                         reason = CaptureControl.RESET_REASON_DISPLAY_PROPERTIES_CHANGED;
-                        // Display properties have changed, cancel pending client resize requests
-                        debouncer.cancelResize();
                     }
-                } else {
-                    reason = CaptureControl.RESET_REASON_DISPLAY_PROPERTIES_CHANGED;
+                    getCaptureControl().reset(reason);
                 }
-                getCaptureControl().reset(reason);
             });
         } catch (Exception e) {
             Ln.e("Could not create display", e);

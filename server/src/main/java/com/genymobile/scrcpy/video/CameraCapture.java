@@ -209,45 +209,56 @@ public class CameraCapture extends SurfaceCapture {
 
         Stream<android.util.Size> stream = Arrays.stream(sizes);
         if (maxSize > 0) {
-            stream = stream.filter(it -> it.getWidth() <= maxSize && it.getHeight() <= maxSize);
+            stream = stream.filter(new java.util.function.Predicate<android.util.Size>() {
+                @Override
+                public boolean test(android.util.Size it) {
+                    return it.getWidth() <= maxSize && it.getHeight() <= maxSize;
+                }
+            });
         }
 
         Float targetAspectRatio = resolveAspectRatio(aspectRatio, characteristics);
         if (targetAspectRatio != null) {
-            stream = stream.filter(it -> {
-                float ar = ((float) it.getWidth() / it.getHeight());
-                float arRatio = ar / targetAspectRatio;
-                // Accept if the aspect ratio is the target aspect ratio + or - 10%
-                return arRatio >= 0.9f && arRatio <= 1.1f;
+            stream = stream.filter(new java.util.function.Predicate<android.util.Size>() {
+                @Override
+                public boolean test(android.util.Size it) {
+                    float ar = ((float) it.getWidth() / it.getHeight());
+                    float arRatio = ar / targetAspectRatio;
+                    // Accept if the aspect ratio is the target aspect ratio + or - 10%
+                    return arRatio >= 0.9f && arRatio <= 1.1f;
+                }
             });
         }
 
-        Optional<android.util.Size> selected = stream.max((s1, s2) -> {
-            // Greater width is better
-            int cmp = Integer.compare(s1.getWidth(), s2.getWidth());
-            if (cmp != 0) {
-                return cmp;
-            }
-
-            if (targetAspectRatio != null) {
-                // Closer to the target aspect ratio is better
-                float ar1 = ((float) s1.getWidth() / s1.getHeight());
-                float arRatio1 = ar1 / targetAspectRatio;
-                float distance1 = Math.abs(1 - arRatio1);
-
-                float ar2 = ((float) s2.getWidth() / s2.getHeight());
-                float arRatio2 = ar2 / targetAspectRatio;
-                float distance2 = Math.abs(1 - arRatio2);
-
-                // Reverse the order because lower distance is better
-                cmp = Float.compare(distance2, distance1);
+        Optional<android.util.Size> selected = stream.max(new java.util.Comparator<android.util.Size>() {
+            @Override
+            public int compare(android.util.Size s1, android.util.Size s2) {
+                // Greater width is better
+                int cmp = Integer.compare(s1.getWidth(), s2.getWidth());
                 if (cmp != 0) {
                     return cmp;
                 }
-            }
 
-            // Greater height is better
-            return Integer.compare(s1.getHeight(), s2.getHeight());
+                if (targetAspectRatio != null) {
+                    // Closer to the target aspect ratio is better
+                    float ar1 = ((float) s1.getWidth() / s1.getHeight());
+                    float arRatio1 = ar1 / targetAspectRatio;
+                    float distance1 = Math.abs(1 - arRatio1);
+
+                    float ar2 = ((float) s2.getWidth() / s2.getHeight());
+                    float arRatio2 = ar2 / targetAspectRatio;
+                    float distance2 = Math.abs(1 - arRatio2);
+
+                    // Reverse the order because lower distance is better
+                    cmp = Float.compare(distance2, distance1);
+                    if (cmp != 0) {
+                        return cmp;
+                    }
+                }
+
+                // Greater height is better
+                return Integer.compare(s1.getHeight(), s2.getHeight());
+            }
         });
 
         if (selected.isPresent()) {
@@ -284,9 +295,12 @@ public class CameraCapture extends SurfaceCapture {
             surface = glRunner.start(captureSize, videoSize, surface);
         }
 
-        cameraHandler.post(() -> {
-            assertCameraThread();
-            started = true;
+        cameraHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                assertCameraThread();
+                started = true;
+            }
         });
 
         Surface captureSurface = surface;
@@ -355,11 +369,14 @@ public class CameraCapture extends SurfaceCapture {
 
     @Override
     public void stop() {
-        cameraHandler.post(() -> {
-            assertCameraThread();
-            currentSession = null;
-            requestBuilder = null;
-            started = false;
+        cameraHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                assertCameraThread();
+                currentSession = null;
+                requestBuilder = null;
+                started = false;
+            }
         });
 
         if (glRunner != null) {
@@ -470,16 +487,19 @@ public class CameraCapture extends SurfaceCapture {
     }
 
     public void setTorchEnabled(boolean enabled) {
-        cameraHandler.post(() -> {
-            assertCameraThread();
-            if (currentSession != null && requestBuilder != null) {
-                try {
-                    Ln.i("Turn camera torch " + (enabled ? "on" : "off"));
-                    requestBuilder.set(CaptureRequest.FLASH_MODE, enabled ? CaptureRequest.FLASH_MODE_TORCH : CaptureRequest.FLASH_MODE_OFF);
-                    CaptureRequest request = requestBuilder.build();
-                    setRepeatingRequest(currentSession, request);
-                } catch (CameraAccessException e) {
-                    Ln.e("Camera error", e);
+        cameraHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                assertCameraThread();
+                if (currentSession != null && requestBuilder != null) {
+                    try {
+                        Ln.i("Turn camera torch " + (enabled ? "on" : "off"));
+                        requestBuilder.set(CaptureRequest.FLASH_MODE, enabled ? CaptureRequest.FLASH_MODE_TORCH : CaptureRequest.FLASH_MODE_OFF);
+                        CaptureRequest request = requestBuilder.build();
+                        setRepeatingRequest(currentSession, request);
+                    } catch (CameraAccessException e) {
+                        Ln.e("Camera error", e);
+                    }
                 }
             }
         });
@@ -487,22 +507,25 @@ public class CameraCapture extends SurfaceCapture {
 
     @TargetApi(AndroidVersions.API_30_ANDROID_11)
     private void zoom(boolean in) {
-        cameraHandler.post(() -> {
-            assertCameraThread();
-            if (currentSession != null && requestBuilder != null) {
-                // Always align to log values
-                double z = Math.round(Math.log(zoom) / Math.log(ZOOM_FACTOR));
-                double dir = in ? 1 : -1;
-                zoom = (float) Math.pow(ZOOM_FACTOR, z + dir);
+        cameraHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                assertCameraThread();
+                if (currentSession != null && requestBuilder != null) {
+                    // Always align to log values
+                    double z = Math.round(Math.log(zoom) / Math.log(ZOOM_FACTOR));
+                    double dir = in ? 1 : -1;
+                    zoom = (float) Math.pow(ZOOM_FACTOR, z + dir);
 
-                try {
-                    zoom = clampZoom(zoom);
-                    Ln.i("Set camera zoom: " + zoom);
-                    requestBuilder.set(CaptureRequest.CONTROL_ZOOM_RATIO, zoom);
-                    CaptureRequest request = requestBuilder.build();
-                    setRepeatingRequest(currentSession, request);
-                } catch (CameraAccessException e) {
-                    Ln.e("Camera error", e);
+                    try {
+                        zoom = clampZoom(zoom);
+                        Ln.i("Set camera zoom: " + zoom);
+                        requestBuilder.set(CaptureRequest.CONTROL_ZOOM_RATIO, zoom);
+                        CaptureRequest request = requestBuilder.build();
+                        setRepeatingRequest(currentSession, request);
+                    } catch (CameraAccessException e) {
+                        Ln.e("Camera error", e);
+                    }
                 }
             }
         });

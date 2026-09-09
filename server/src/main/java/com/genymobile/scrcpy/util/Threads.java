@@ -17,13 +17,16 @@ public final class Threads {
         T[] resultRef = (T[]) new Object[1];
         Throwable[] throwableRef = new Throwable[1];
 
-        handler.post(() -> {
-            try {
-                resultRef[0] = callable.call();
-            } catch (Throwable throwable) {
-                throwableRef[0] = throwable;
-            } finally {
-                sem.release();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    resultRef[0] = callable.call();
+                } catch (Throwable throwable) {
+                    throwableRef[0] = throwable;
+                } finally {
+                    sem.release();
+                }
             }
         });
 

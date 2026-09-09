@@ -31,13 +31,16 @@ public final class DeviceMessageSender {
     }
 
     public void start() {
-        thread = new Thread(() -> {
-            try {
-                loop();
-            } catch (IOException | InterruptedException e) {
-                // this is expected on close
-            } finally {
-                Ln.d("Device message sender stopped");
+        thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    loop();
+                } catch (IOException | InterruptedException e) {
+                    // this is expected on close
+                } finally {
+                    Ln.d("Device message sender stopped");
+                }
             }
         }, "control-send");
         thread.start();

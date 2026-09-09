@@ -48,17 +48,20 @@ public class DisplayMonitor {
             handlerThread = new HandlerThread("DisplayListener");
             handlerThread.start();
             Handler handler = new Handler(handlerThread.getLooper());
-            displayListenerHandle = ServiceManager.getDisplayManager().registerDisplayListener(eventDisplayId -> {
-                if (Ln.isEnabled(Ln.Level.VERBOSE)) {
-                    Ln.v("DisplayMonitor: onDisplayChanged(" + eventDisplayId + ")");
-                }
+            displayListenerHandle = ServiceManager.getDisplayManager().registerDisplayListener(new DisplayManager.DisplayListener() {
+                @Override
+                public void onDisplayChanged(int eventDisplayId) {
+                    if (Ln.isEnabled(Ln.Level.VERBOSE)) {
+                        Ln.v("DisplayMonitor: onDisplayChanged(" + eventDisplayId + ")");
+                    }
 
-                if (eventDisplayId == displayId) {
-                    try {
-                        checkDisplayPropertiesChanged();
-                    } catch (Throwable e) {
-                        Ln.e("DisplayMonitor error", e);
-                        throw e;
+                    if (eventDisplayId == displayId) {
+                        try {
+                            checkDisplayPropertiesChanged();
+                        } catch (Throwable e) {
+                            Ln.e("DisplayMonitor error", e);
+                            throw e;
+                        }
                     }
                 }
             }, handler);

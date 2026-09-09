@@ -94,12 +94,15 @@ public final class Size {
         int maxBlock = maxMajor / alignment;
 
         int bestBlock = BinarySearch.findHighestTrue(
-                minBlock, maxBlock, block -> {
+            minBlock, maxBlock, new java.util.function.Predicate<Integer>() {
+                @Override
+                public boolean test(Integer block) {
                     int pixels = block * alignment;
                     int w = align(width * pixels / major, alignment);
                     int h = align(height * pixels / major, alignment);
                     return caps.isSizeSupported(w, h);
-                });
+                }
+            });
 
         if (bestBlock < minBlock) {
             Ln.d("No matching size found, ignore encoder size validation");

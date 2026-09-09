@@ -31,7 +31,12 @@ public final class CleanUp {
     private boolean interrupted;
 
     private CleanUp(Options options) {
-        thread = new Thread(() -> runCleanUp(options), "cleanup");
+        thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runCleanUp(options);
+            }
+        }, "cleanup");
         thread.start();
     }
 

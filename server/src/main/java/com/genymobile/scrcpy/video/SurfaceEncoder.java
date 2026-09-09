@@ -349,23 +349,26 @@ public class SurfaceEncoder implements AsyncProcessor {
 
     @Override
     public void start(TerminationListener listener) {
-        thread = new Thread(() -> {
-            // Some devices (Meizu) deadlock if the video encoding thread has no Looper
-            // <https://github.com/Genymobile/scrcpy/issues/4143>
-            Looper.prepare();
+        thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // Some devices (Meizu) deadlock if the video encoding thread has no Looper
+                // <https://github.com/Genymobile/scrcpy/issues/4143>
+                Looper.prepare();
 
-            try {
-                streamCapture();
-            } catch (ConfigurationException e) {
-                // Do not print stack trace, a user-friendly error-message has already been logged
-            } catch (IOException e) {
-                // Broken pipe is expected on close, because the socket is closed by the client
-                if (!IO.isBrokenPipe(e)) {
-                    Ln.e("Video encoding error", e);
+                try {
+                    streamCapture();
+                } catch (ConfigurationException e) {
+                    // Do not print stack trace, a user-friendly error-message has already been logged
+                } catch (IOException e) {
+                    // Broken pipe is expected on close, because the socket is closed by the client
+                    if (!IO.isBrokenPipe(e)) {
+                        Ln.e("Video encoding error", e);
+                    }
+                } finally {
+                    Ln.d("Screen streaming stopped");
+                    listener.onTerminated(true);
                 }
-            } finally {
-                Ln.d("Screen streaming stopped");
-                listener.onTerminated(true);
             }
         }, "video");
         thread.start();

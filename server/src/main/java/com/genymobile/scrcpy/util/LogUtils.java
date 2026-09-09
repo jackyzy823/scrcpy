@@ -259,19 +259,32 @@ public final class LogUtils {
         //  2. name
         //  3. package name
         // Comparator.comparing() was introduced in API 24, so it cannot be used here to simplify the code
-        Collections.sort(apps, (thisApp, otherApp) -> {
-            // System apps first
-            int cmp = -Boolean.compare(thisApp.isSystem(), otherApp.isSystem());
-            if (cmp != 0) {
-                return cmp;
-            }
+        Collections.sort(apps, new java.util.Comparator<DeviceApp>() {
+            @Override
+            public int compare(DeviceApp thisApp, DeviceApp otherApp) {
+                // System apps first
+                int cmp = -Boolean.compare(thisApp.isSystem(), otherApp.isSystem());
+                if (cmp != 0) {
+                    return cmp;
+                }
 
-            cmp = Objects.compare(thisApp.getName(), otherApp.getName(), String::compareTo);
-            if (cmp != 0) {
-                return cmp;
-            }
+                cmp = Objects.compare(thisApp.getName(), otherApp.getName(), new java.util.Comparator<String>() {
+                    @Override
+                    public int compare(String s1, String s2) {
+                        return s1.compareTo(s2);
+                    }
+                });
+                if (cmp != 0) {
+                    return cmp;
+                }
 
-            return Objects.compare(thisApp.getPackageName(), otherApp.getPackageName(), String::compareTo);
+                return Objects.compare(thisApp.getPackageName(), otherApp.getPackageName(), new java.util.Comparator<String>() {
+                    @Override
+                    public int compare(String s1, String s2) {
+                        return s1.compareTo(s2);
+                    }
+                });
+            }
         });
 
         final int column = 30;

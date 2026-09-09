@@ -25,7 +25,12 @@ public final class DisplayResizeDebouncer {
 
     public void start() {
         assert thread == null;
-        thread = new Thread(this::debounce);
+        thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                debounce();
+            }
+        });
         thread.setName("debouncer");
         thread.setDaemon(true);
         thread.start();

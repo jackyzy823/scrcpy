@@ -152,21 +152,24 @@ public final class AudioEncoder implements AsyncProcessor {
 
     @Override
     public void start(TerminationListener listener) {
-        thread = new Thread(() -> {
-            boolean fatalError = false;
-            try {
-                encode();
-            } catch (ConfigurationException e) {
-                // Do not print stack trace, a user-friendly error-message has already been logged
-                fatalError = true;
-            } catch (AudioCaptureException e) {
-                // Do not print stack trace, a user-friendly error-message has already been logged
-            } catch (IOException e) {
-                Ln.e("Audio encoding error", e);
-                fatalError = true;
-            } finally {
-                Ln.d("Audio encoder stopped");
-                listener.onTerminated(fatalError);
+        thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                boolean fatalError = false;
+                try {
+                    encode();
+                } catch (ConfigurationException e) {
+                    // Do not print stack trace, a user-friendly error-message has already been logged
+                    fatalError = true;
+                } catch (AudioCaptureException e) {
+                    // Do not print stack trace, a user-friendly error-message has already been logged
+                } catch (IOException e) {
+                    Ln.e("Audio encoding error", e);
+                    fatalError = true;
+                } finally {
+                    Ln.d("Audio encoder stopped");
+                    listener.onTerminated(fatalError);
+                }
             }
         }, "audio-encoder");
         thread.start();
@@ -208,6 +211,7 @@ public final class AudioEncoder implements AsyncProcessor {
             Ln.w("Audio disabled: it is not supported before Android 11");
             streamer.writeDisableStream(false);
             return;
+
         }
 
         MediaCodec mediaCodec = null;
@@ -235,28 +239,34 @@ public final class AudioEncoder implements AsyncProcessor {
             capture.start();
 
             final MediaCodec mediaCodecRef = mediaCodec;
-            inputThread = new Thread(() -> {
-                try {
-                    inputThread(mediaCodecRef, capture);
-                } catch (IOException | InterruptedException e) {
-                    Ln.e("Audio capture error", e);
-                } finally {
-                    end();
+            inputThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        inputThread(mediaCodecRef, capture);
+                    } catch (IOException | InterruptedException e) {
+                        Ln.e("Audio capture error", e);
+                    } finally {
+                        end();
+                    }
                 }
             }, "audio-in");
 
-            outputThread = new Thread(() -> {
-                try {
-                    outputThread(mediaCodecRef);
-                } catch (InterruptedException e) {
-                    // this is expected on close
-                } catch (IOException e) {
-                    // Broken pipe is expected on close, because the socket is closed by the client
-                    if (!IO.isBrokenPipe(e)) {
-                        Ln.e("Audio encoding error", e);
+            outputThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        outputThread(mediaCodecRef);
+                    } catch (InterruptedException e) {
+                        // this is expected on close
+                    } catch (IOException e) {
+                        // Broken pipe is expected on close, because the socket is closed by the client
+                        if (!IO.isBrokenPipe(e)) {
+                            Ln.e("Audio encoding error", e);
+                        }
+                    } finally {
+                        end();
                     }
-                } finally {
-                    end();
                 }
             }, "audio-out");
 

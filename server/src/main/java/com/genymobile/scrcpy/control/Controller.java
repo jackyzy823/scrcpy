@@ -146,15 +146,18 @@ public class Controller implements AsyncProcessor, VirtualDisplayListener {
         if (clipboardAutosync) {
             // If control and autosync are enabled, synchronize Android clipboard to the computer automatically
             if (clipboardManager != null) {
-                clipboardManager.addPrimaryClipChangedListener(() -> {
-                    if (isSettingClipboard.get()) {
-                        // This is a notification for the change we are currently applying, ignore it
-                        return;
-                    }
-                    String text = Device.getClipboardText();
-                    if (text != null) {
-                        DeviceMessage msg = DeviceMessage.createClipboard(text);
-                        sender.send(msg);
+                clipboardManager.addPrimaryClipChangedListener(new android.content.ClipboardManager.OnPrimaryClipChangedListener() {
+                    @Override
+                    public void onPrimaryClipChanged() {
+                        if (isSettingClipboard.get()) {
+                            // This is a notification for the change we are currently applying, ignore it
+                            return;
+                        }
+                        String text = Device.getClipboardText();
+                        if (text != null) {
+                            DeviceMessage msg = DeviceMessage.createClipboard(text);
+                            sender.send(msg);
+                        }
                     }
                 });
             } else {
@@ -248,21 +251,24 @@ public class Controller implements AsyncProcessor, VirtualDisplayListener {
     }
 
     private void startKeepActiveThread() {
-        keepActiveThread = new Thread(() -> {
-            try {
-                while (true) {
-                    Thread.sleep(KEEP_ACTIVE_INTERVAL_MS);
-                    int actionDisplayId = getActionDisplayId();
-                    if (actionDisplayId != Device.DISPLAY_ID_NONE) {
-                        Device.keepActive(actionDisplayId);
+        keepActiveThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    while (true) {
+                        Thread.sleep(KEEP_ACTIVE_INTERVAL_MS);
+                        int actionDisplayId = getActionDisplayId();
+                        if (actionDisplayId != Device.DISPLAY_ID_NONE) {
+                            Device.keepActive(actionDisplayId);
+                        }
                     }
+                } catch (InterruptedException e) {
+                    // ignore
+                } catch (Throwable e) {
+                    Ln.e("Keep active error", e);
+                } finally {
+                    Ln.d("Keep active thread stopped");
                 }
-            } catch (InterruptedException e) {
-                // ignore
-            } catch (Throwable e) {
-                Ln.e("Keep active error", e);
-            } finally {
-                Ln.d("Keep active thread stopped");
             }
         });
         keepActiveThread.setName("keep-active");
@@ -276,17 +282,20 @@ public class Controller implements AsyncProcessor, VirtualDisplayListener {
             startKeepActiveThread();
         }
 
-        thread = new Thread(() -> {
-            try {
-                control();
-            } catch (IOException e) {
-                Ln.e("Controller error", e);
-            } finally {
-                Ln.d("Controller stopped");
-                if (uhidManager != null) {
-                    uhidManager.closeAll();
+        thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    control();
+                } catch (IOException e) {
+                    Ln.e("Controller error", e);
+                } finally {
+                    Ln.d("Controller stopped");
+                    if (uhidManager != null) {
+                        uhidManager.closeAll();
+                    }
+                    listener.onTerminated(true);
                 }
-                listener.onTerminated(true);
             }
         }, "control-recv");
         thread.start();
@@ -649,9 +658,12 @@ public class Controller implements AsyncProcessor, VirtualDisplayListener {
      * Schedule a call to set display power to off after a small delay.
      */
     private static void scheduleDisplayPowerOff(int displayId) {
-        EXECUTOR.schedule(() -> {
-            Ln.i("Forcing display off");
-            Device.setDisplayPower(displayId, false);
+        EXECUTOR.schedule(new Runnable() {
+            @Override
+            public void run() {
+                Ln.i("Forcing display off");
+                Device.setDisplayPower(displayId, false);
+            }
         }, 200, TimeUnit.MILLISECONDS);
     }
 
@@ -768,7 +780,12 @@ public class Controller implements AsyncProcessor, VirtualDisplayListener {
         }
 
         // Listing and selecting the app may take a lot of time
-        startAppExecutor.submit(() -> startApp(name));
+        startAppExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                startApp(name);
+            }
+        });
     }
 
     private void startApp(String name) {

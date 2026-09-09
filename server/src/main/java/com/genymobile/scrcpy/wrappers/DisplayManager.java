@@ -205,14 +205,17 @@ public final class DisplayManager {
             Object displayListenerProxy = Proxy.newProxyInstance(
                     ClassLoader.getSystemClassLoader(),
                     new Class[] {displayListenerClass},
-                    (proxy, method, args) -> {
-                        if ("onDisplayChanged".equals(method.getName())) {
-                            listener.onDisplayChanged((int) args[0]);
+                    new java.lang.reflect.InvocationHandler() {
+                        @Override
+                        public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) throws Throwable {
+                            if ("onDisplayChanged".equals(method.getName())) {
+                                listener.onDisplayChanged((int) args[0]);
+                            }
+                            if ("toString".equals(method.getName())) {
+                                return "DisplayListener";
+                            }
+                            return null;
                         }
-                        if ("toString".equals(method.getName())) {
-                            return "DisplayListener";
-                        }
-                        return null;
                     });
             try {
                 manager.getClass()

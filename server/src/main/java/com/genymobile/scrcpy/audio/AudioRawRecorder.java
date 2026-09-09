@@ -66,18 +66,21 @@ public final class AudioRawRecorder implements AsyncProcessor {
 
     @Override
     public void start(TerminationListener listener) {
-        thread = new Thread(() -> {
-            boolean fatalError = false;
-            try {
-                record();
-            } catch (AudioCaptureException e) {
-                // Do not print stack trace, a user-friendly error-message has already been logged
-            } catch (Throwable t) {
-                Ln.e("Audio recording error", t);
-                fatalError = true;
-            } finally {
-                Ln.d("Audio recorder stopped");
-                listener.onTerminated(fatalError);
+        thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                boolean fatalError = false;
+                try {
+                    record();
+                } catch (AudioCaptureException e) {
+                    // Do not print stack trace, a user-friendly error-message has already been logged
+                } catch (Throwable t) {
+                    Ln.e("Audio recording error", t);
+                    fatalError = true;
+                } finally {
+                    Ln.d("Audio recorder stopped");
+                    listener.onTerminated(fatalError);
+                }
             }
         }, "audio-raw");
         thread.start();
