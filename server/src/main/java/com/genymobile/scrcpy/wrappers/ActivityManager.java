@@ -47,11 +47,11 @@ public final class ActivityManager {
     private Method getGetContentProviderExternalMethod() throws NoSuchMethodException {
         if (getContentProviderExternalMethod == null) {
             try {
-                getContentProviderExternalMethod = manager.getClass()
+                getContentProviderExternalMethod = ((Object) manager).getClass()
                         .getMethod("getContentProviderExternal", String.class, int.class, IBinder.class, String.class);
             } catch (NoSuchMethodException e) {
                 // old version
-                getContentProviderExternalMethod = manager.getClass().getMethod("getContentProviderExternal", String.class, int.class, IBinder.class);
+                getContentProviderExternalMethod = ((Object) manager).getClass().getMethod("getContentProviderExternal", String.class, int.class, IBinder.class);
                 getContentProviderExternalMethodNewVersion = false;
             }
         }
@@ -60,7 +60,7 @@ public final class ActivityManager {
 
     private Method getRemoveContentProviderExternalMethod() throws NoSuchMethodException {
         if (removeContentProviderExternalMethod == null) {
-            removeContentProviderExternalMethod = manager.getClass().getMethod("removeContentProviderExternal", String.class, IBinder.class);
+            removeContentProviderExternalMethod = ((Object) manager).getClass().getMethod("removeContentProviderExternal", String.class, IBinder.class);
         }
         return removeContentProviderExternalMethod;
     }
@@ -114,7 +114,7 @@ public final class ActivityManager {
         if (startActivityAsUserMethod == null) {
             Class<?> iApplicationThreadClass = Class.forName("android.app.IApplicationThread");
             Class<?> profilerInfo = Class.forName("android.app.ProfilerInfo");
-            startActivityAsUserMethod = manager.getClass()
+            startActivityAsUserMethod = ((Object) manager).getClass()
                     .getMethod("startActivityAsUser", iApplicationThreadClass, String.class, Intent.class, String.class, IBinder.class, String.class,
                             int.class, int.class, profilerInfo, Bundle.class, int.class);
         }
@@ -150,7 +150,7 @@ public final class ActivityManager {
 
     private Method getForceStopPackageMethod() throws NoSuchMethodException {
         if (forceStopPackageMethod == null) {
-            forceStopPackageMethod = manager.getClass().getMethod("forceStopPackage", String.class, int.class);
+            forceStopPackageMethod = ((Object) manager).getClass().getMethod("forceStopPackage", String.class, int.class);
         }
         return forceStopPackageMethod;
     }
@@ -169,7 +169,7 @@ public final class ActivityManager {
             try {
                 Class<?> iApplicationThreadClass = Class.forName("android.app.IApplicationThread");
                 Class<?> iIntentReceiverClass = Class.forName("android.content.IIntentReceiver");
-                broadcastIntentMethod = manager.getClass()
+                broadcastIntentMethod = ((Object) manager).getClass()
                         .getMethod("broadcastIntent", iApplicationThreadClass, Intent.class, String.class, iIntentReceiverClass, int.class,
                                 String.class, Bundle.class, String[].class, int.class, Bundle.class, boolean.class, boolean.class, int.class);
             } catch (ClassNotFoundException e) {

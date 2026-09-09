@@ -27,10 +27,10 @@ public final class StatusBarManager {
     private Method getExpandNotificationsPanelMethod() throws NoSuchMethodException {
         if (expandNotificationsPanelMethod == null) {
             try {
-                expandNotificationsPanelMethod = manager.getClass().getMethod("expandNotificationsPanel");
+                expandNotificationsPanelMethod = ((Object) manager).getClass().getMethod("expandNotificationsPanel");
             } catch (NoSuchMethodException e) {
                 // Custom version for custom vendor ROM: <https://github.com/Genymobile/scrcpy/issues/2551>
-                expandNotificationsPanelMethod = manager.getClass().getMethod("expandNotificationsPanel", int.class);
+                expandNotificationsPanelMethod = ((Object) manager).getClass().getMethod("expandNotificationsPanel", int.class);
                 expandNotificationPanelMethodCustomVersion = true;
             }
         }
@@ -41,10 +41,10 @@ public final class StatusBarManager {
         if (expandSettingsPanelMethod == null) {
             try {
                 // Since Android 7: https://android.googlesource.com/platform/frameworks/base.git/+/a9927325eda025504d59bb6594fee8e240d95b01%5E%21/
-                expandSettingsPanelMethod = manager.getClass().getMethod("expandSettingsPanel", String.class);
+                expandSettingsPanelMethod = ((Object) manager).getClass().getMethod("expandSettingsPanel", String.class);
             } catch (NoSuchMethodException e) {
                 // old version
-                expandSettingsPanelMethod = manager.getClass().getMethod("expandSettingsPanel");
+                expandSettingsPanelMethod = ((Object) manager).getClass().getMethod("expandSettingsPanel");
                 expandSettingsPanelMethodNewVersion = false;
             }
         }
@@ -53,7 +53,7 @@ public final class StatusBarManager {
 
     private Method getCollapsePanelsMethod() throws NoSuchMethodException {
         if (collapsePanelsMethod == null) {
-            collapsePanelsMethod = manager.getClass().getMethod("collapsePanels");
+            collapsePanelsMethod = ((Object) manager).getClass().getMethod("collapsePanels");
         }
         return collapsePanelsMethod;
     }

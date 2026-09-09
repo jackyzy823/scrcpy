@@ -44,7 +44,7 @@ public final class WindowManager {
 
     private Method getGetRotationMethod() throws NoSuchMethodException {
         if (getRotationMethod == null) {
-            Class<?> cls = manager.getClass();
+            Class<?> cls = ((Object) manager).getClass();
             try {
                 // method changed since this commit:
                 // https://android.googlesource.com/platform/frameworks/base/+/8ee7285128c3843401d4c4d0412cd66e86ba49e3%5E%21/#F2
@@ -62,16 +62,16 @@ public final class WindowManager {
             try {
                 // Android 15 preview and 14 QPR3 Beta added a String caller parameter for debugging:
                 // <https://android.googlesource.com/platform/frameworks/base/+/670fb7f5c0d23cf51ead25538bcb017e03ed73ac%5E%21/>
-                freezeDisplayRotationMethod = manager.getClass().getMethod("freezeDisplayRotation", int.class, int.class, String.class);
+                freezeDisplayRotationMethod = ((Object) manager).getClass().getMethod("freezeDisplayRotation", int.class, int.class, String.class);
                 freezeDisplayRotationMethodVersion = 0;
             } catch (NoSuchMethodException e) {
                 try {
                     // New method added by this commit:
                     // <https://android.googlesource.com/platform/frameworks/base/+/90c9005e687aa0f63f1ac391adc1e8878ab31759%5E%21/>
-                    freezeDisplayRotationMethod = manager.getClass().getMethod("freezeDisplayRotation", int.class, int.class);
+                    freezeDisplayRotationMethod = ((Object) manager).getClass().getMethod("freezeDisplayRotation", int.class, int.class);
                     freezeDisplayRotationMethodVersion = 1;
                 } catch (NoSuchMethodException e1) {
-                    freezeDisplayRotationMethod = manager.getClass().getMethod("freezeRotation", int.class);
+                    freezeDisplayRotationMethod = ((Object) manager).getClass().getMethod("freezeRotation", int.class);
                     freezeDisplayRotationMethodVersion = 2;
                 }
             }
@@ -84,10 +84,10 @@ public final class WindowManager {
             try {
                 // New method added by this commit:
                 // <https://android.googlesource.com/platform/frameworks/base/+/90c9005e687aa0f63f1ac391adc1e8878ab31759%5E%21/>
-                isDisplayRotationFrozenMethod = manager.getClass().getMethod("isDisplayRotationFrozen", int.class);
+                isDisplayRotationFrozenMethod = ((Object) manager).getClass().getMethod("isDisplayRotationFrozen", int.class);
                 isDisplayRotationFrozenMethodVersion = 0;
             } catch (NoSuchMethodException e) {
-                isDisplayRotationFrozenMethod = manager.getClass().getMethod("isRotationFrozen");
+                isDisplayRotationFrozenMethod = ((Object) manager).getClass().getMethod("isRotationFrozen");
                 isDisplayRotationFrozenMethodVersion = 1;
             }
         }
@@ -99,16 +99,16 @@ public final class WindowManager {
             try {
                 // Android 15 preview and 14 QPR3 Beta added a String caller parameter for debugging:
                 // <https://android.googlesource.com/platform/frameworks/base/+/670fb7f5c0d23cf51ead25538bcb017e03ed73ac%5E%21/>
-                thawDisplayRotationMethod = manager.getClass().getMethod("thawDisplayRotation", int.class, String.class);
+                thawDisplayRotationMethod = ((Object) manager).getClass().getMethod("thawDisplayRotation", int.class, String.class);
                 thawDisplayRotationMethodVersion = 0;
             } catch (NoSuchMethodException e) {
                 try {
                     // New method added by this commit:
                     // <https://android.googlesource.com/platform/frameworks/base/+/90c9005e687aa0f63f1ac391adc1e8878ab31759%5E%21/>
-                    thawDisplayRotationMethod = manager.getClass().getMethod("thawDisplayRotation", int.class);
+                    thawDisplayRotationMethod = ((Object) manager).getClass().getMethod("thawDisplayRotation", int.class);
                     thawDisplayRotationMethodVersion = 1;
                 } catch (NoSuchMethodException e1) {
-                    thawDisplayRotationMethod = manager.getClass().getMethod("thawRotation");
+                    thawDisplayRotationMethod = ((Object) manager).getClass().getMethod("thawRotation");
                     thawDisplayRotationMethodVersion = 2;
                 }
             }
@@ -194,7 +194,7 @@ public final class WindowManager {
     @TargetApi(AndroidVersions.API_30_ANDROID_11)
     public int[] registerDisplayWindowListener(IDisplayWindowListener listener) {
         try {
-            return (int[]) manager.getClass().getMethod("registerDisplayWindowListener", IDisplayWindowListener.class).invoke(manager, listener);
+            return (int[]) ((Object) manager).getClass().getMethod("registerDisplayWindowListener", IDisplayWindowListener.class).invoke(manager, listener);
         } catch (Exception e) {
             Ln.e("Could not register display window listener", e);
         }
@@ -204,7 +204,7 @@ public final class WindowManager {
     @TargetApi(AndroidVersions.API_30_ANDROID_11)
     public void unregisterDisplayWindowListener(IDisplayWindowListener listener) {
         try {
-            manager.getClass().getMethod("unregisterDisplayWindowListener", IDisplayWindowListener.class).invoke(manager, listener);
+            ((Object) manager).getClass().getMethod("unregisterDisplayWindowListener", IDisplayWindowListener.class).invoke(manager, listener);
         } catch (Exception e) {
             Ln.e("Could not unregister display window listener", e);
         }
@@ -214,9 +214,9 @@ public final class WindowManager {
     private Method getGetDisplayImePolicyMethod() throws NoSuchMethodException {
         if (getDisplayImePolicyMethod == null) {
             if (Build.VERSION.SDK_INT >= AndroidVersions.API_31_ANDROID_12) {
-                getDisplayImePolicyMethod = manager.getClass().getMethod("getDisplayImePolicy", int.class);
+                getDisplayImePolicyMethod = ((Object) manager).getClass().getMethod("getDisplayImePolicy", int.class);
             } else {
-                getDisplayImePolicyMethod = manager.getClass().getMethod("shouldShowIme", int.class);
+                getDisplayImePolicyMethod = ((Object) manager).getClass().getMethod("shouldShowIme", int.class);
             }
         }
         return getDisplayImePolicyMethod;
@@ -241,9 +241,9 @@ public final class WindowManager {
     private Method getSetDisplayImePolicyMethod() throws NoSuchMethodException {
         if (setDisplayImePolicyMethod == null) {
             if (Build.VERSION.SDK_INT >= AndroidVersions.API_31_ANDROID_12) {
-                setDisplayImePolicyMethod = manager.getClass().getMethod("setDisplayImePolicy", int.class, int.class);
+                setDisplayImePolicyMethod = ((Object) manager).getClass().getMethod("setDisplayImePolicy", int.class, int.class);
             } else {
-                setDisplayImePolicyMethod = manager.getClass().getMethod("setShouldShowIme", int.class, boolean.class);
+                setDisplayImePolicyMethod = ((Object) manager).getClass().getMethod("setShouldShowIme", int.class, boolean.class);
             }
         }
         return setDisplayImePolicyMethod;

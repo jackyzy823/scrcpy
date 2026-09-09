@@ -29,9 +29,9 @@ public final class PowerManager {
     private Method getIsScreenOnMethod() throws NoSuchMethodException {
         if (isScreenOnMethod == null) {
             if (Build.VERSION.SDK_INT >= AndroidVersions.API_34_ANDROID_14) {
-                isScreenOnMethod = manager.getClass().getMethod("isDisplayInteractive", int.class);
+                isScreenOnMethod = ((Object) manager).getClass().getMethod("isDisplayInteractive", int.class);
             } else {
-                isScreenOnMethod = manager.getClass().getMethod("isInteractive");
+                isScreenOnMethod = ((Object) manager).getClass().getMethod("isInteractive");
             }
         }
         return isScreenOnMethod;
@@ -55,10 +55,10 @@ public final class PowerManager {
         if (userActivityMethod == null) {
             if (Build.VERSION.SDK_INT >= AndroidVersions.API_31_ANDROID_12) {
                 // userActivity(int displayId, long time, int event, int flags);
-                userActivityMethod = manager.getClass().getMethod("userActivity", int.class, long.class, int.class, int.class);
+                userActivityMethod = ((Object) manager).getClass().getMethod("userActivity", int.class, long.class, int.class, int.class);
             } else {
                 // userActivity(long time, int event, int flags);
-                userActivityMethod = manager.getClass().getMethod("userActivity", long.class, int.class, int.class);
+                userActivityMethod = ((Object) manager).getClass().getMethod("userActivity", long.class, int.class, int.class);
             }
         }
         return userActivityMethod;
